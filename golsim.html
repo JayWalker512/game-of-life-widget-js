@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GOL</title>
+        <script src="golsim.js"></script>
+        <style>
+            body {
+                background-color: gray;
+            }
+        </style>
+    </head>
+    <body id="body">
+        <div id="gol">
+        </div>
+        <div id="gol2">
+        </div>
+        <script>
+            var widget = MakeGameOfLifeSimulator("gol", {
+                width: 300, 
+                height: 300,
+                worldWidth: 10,
+                worldHeight: 10,
+                msPerGeneration: 2500,
+                backgroundColor: "#000000"
+            });
+            widget.insertPattern(1,1, "010\n001\n111");
+            widget.play();
+
+            var widget2 = MakeGameOfLifeSimulator("gol2", {
+                width: 500, 
+                height: 500,
+                worldWidth: 25,
+                worldHeight: 25,
+                msPerGeneration: 500,
+                backgroundColor: "#00FF00"
+            });
+            document.getElementById("gol2").appendChild(widget2.getPlayPauseButton());
+        </script>
+    </body>
+</html>
