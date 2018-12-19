@@ -25,6 +25,7 @@
             });
             widget.insertPattern(1,1, "010\n001\n111");
             widget.play();
+            widget.resize(200,200);
 
             var widget2 = MakeGameOfLifeSimulator("gol2", {
                 width: 500, 
@@ -32,9 +33,18 @@
                 worldWidth: 25,
                 worldHeight: 25,
                 msPerGeneration: 500,
-                backgroundColor: "#00FF00"
+                backgroundColor: "#00FF00",
+                birthRule: [1],
+                //surviveRule: [1,2,3]
+                surviveRule: [1,2,3,4,5,6,7,8],
             });
             document.getElementById("gol2").appendChild(widget2.getPlayPauseButton());
+
+            var ind = widget2.addClickCallback(function(x,y,widg) {
+                widg.insertPattern(x,y, "010\n001\n111");
+            });
+
+            widget2.removeClickCallback(ind);
         </script>
     </body>
 </html>

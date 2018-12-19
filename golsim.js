@@ -35,12 +35,22 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
     var cellColor = params.cellColor || "#FF0000";
     var backgroundColor = params.backgroundColor || "#FFFFFF";
     
+    var birthRule = params.birthRule || [3];
+    var surviveRule = params.surviveRule || [2,3];
+
     var bPlaying = false;
 
     var mouseState = {
         bOverCanvas: false,
         x: 0,
         y: 0,
+    }
+
+    var callbackArray = [];
+
+    golWidget.resize = function(width, height) {
+        cnv.width = width;
+        cnv.height = height;
     }
 
     /* Erases the canvas to the backgroundColor */
@@ -87,7 +97,6 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
         }
         var x = cellX % worldWidth;
         var y = cellY % worldHeight;
-        //console.log(x + "," + y + ": " + (cellArray[(y * worldWidth) + x] ? 1 : 0));
         return (cellArray[(y * worldWidth) + x] ? 1 : 0);
     }
     
@@ -161,19 +170,31 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
                 numNeighbors += golWidget.getCell(x-1,y+1);
                 numNeighbors += golWidget.getCell(x,y+1);
                 numNeighbors += golWidget.getCell(x+1,y+1);
+                
                 if (curState == 1) {
-                    if (numNeighbors < 2 || numNeighbors > 3) {
-                        //cell dies
+                    var bMatched = false;
+                    for (var i = 0; i < surviveRule.length; i++) {
+                        if (numNeighbors == surviveRule[i]) {
+                            bMatched = true;
+                            break;
+                        }
+                    }
+
+                    //Survival rule not satisfied, kill cell
+                    if (bMatched == false) {
                         newCellArray[(y * worldWidth) + x] = 0;
-                        //console.log("Cell at (" + x + "," + y + ") dies.");
-                    } else if (numNeighbors == 2 || numNeighbors == 3) {
-                        //cell remains alive
+                    } else {
+                        //Otherwise it lives
                         newCellArray[(y * worldWidth) + x] = 1;
                     }
-                } else {
-                    if (numNeighbors == 3) {
-                        //cell is born
-                        newCellArray[(y * worldWidth) + x] = 1;
+                } else { 
+                    //Cell is not alive, will it be born?
+                    for (var i = 0; i < birthRule.length; i++) {
+                        if (numNeighbors == birthRule[i]) {
+                            //cell is born
+                            newCellArray[(y * worldWidth) + x] = 1;       
+                            break;
+                        }
                     }
                 }
             }
@@ -255,7 +276,29 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
         console.log("Clicked at " + xPos + "," + yPos);
     
         golWidget.toggleCell(cell.x, cell.y);
+
+        for (var i = 0; i < callbackArray.length; i++) {
+            if ((typeof callbackArray[i]) === "function") {
+                callbackArray[i](cell.x, cell.y, golWidget);
+            }
+        }
     }
+
+    golWidget.addClickCallback = function(cb) {
+        if ((typeof cb) === "function") {
+            var ind = callbackArray.length;
+            callbackArray[callbackArray.length] = cb;
+            return ind;
+        }
+        return null;
+    }
+
+    golWidget.removeClickCallback = function(ind) {
+        if (ind < callbackArray.length) {
+            callbackArray[ind] = null;
+        }
+    }
+
 
     /* Calculates the coordinates of a click on the canvas relative
     to the upper left corner, since by default click coordinates
@@ -317,7 +360,7 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
     /* When the mouse moves, we need to update which cell is highlighted
     via the drawMouseOverEffect() called by updateCanvas(). */
     golWidget.mouseMove = function(xPos, yPos) {
-        console.log("Mouse at " + xPos + "," + yPos);
+        //console.log("Mouse at " + xPos + "," + yPos);
         mouseState.bOverCanvas = true;
         mouseState.x = xPos;
         mouseState.y = yPos;
@@ -332,6 +375,7 @@ var MakeGameOfLifeSimulator = function (containerId, params = {}) {
     
     cnv.addEventListener('mouseleave', function(e) {
         mouseState.bOverCanvas = false;
+        updateCanvas();
     });
 
     /* Creates a DOM button object attached to this instance
